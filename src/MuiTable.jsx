@@ -39,7 +39,7 @@ const rows = [
 export default function DataTable() {
 
   useEffect(()=>{
-    axios.get('http://localhost:4000/words')
+    axios.get('https://globe13.onrender.com/words')
       .then((response) => {
         console.log(response);
         setRowsData(response.data)
@@ -73,7 +73,7 @@ export default function DataTable() {
   const submitWords = (words) => {
     console.log(words)
     // e.preventDefault();
-    axios.post('http://localhost:4000/api/generate-pdf', words)
+    axios.post('https://globe13.onrender.com/api/generate-pdf', words)
       .then((response) => {
         console.log('PDF generated successfully!',response);
       })
