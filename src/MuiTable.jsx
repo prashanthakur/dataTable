@@ -55,6 +55,7 @@ export default function DataTable() {
 
   const [select, setSelect] = useState([])
   const [rowsData, setRowsData] = useState([])
+  const [getApiResponse,setApiResponse] = useState(false)
 
   const notify = () => toast("Wow so easy!");
 
@@ -77,10 +78,12 @@ export default function DataTable() {
   // };
 
   const submitWords = (words) => {
+    setApiResponse(true)
     console.log(words)
     // e.preventDefault();
     axios.post('https://globe13.onrender.com/api/generate-pdf', words, { responseType: 'blob' })
       .then((response) => {
+        setApiResponse(false)
         console.log('PDF generated successfully!', response);
         const pdfBlob = new Blob([response.data], { type: 'application/pdf' });
         saveAs(pdfBlob, 'generated.pdf');
@@ -125,7 +128,11 @@ export default function DataTable() {
                 onRowSelectionModelChange={onRowsSelectionHandler}
               />
             </div>
-            <Button variant="contained" onClick={() => submitWords(select)}>Submit</Button>
+            <Button variant={getApiResponse ? "outlined":"contained"} disabled={getApiResponse} onClick={() => submitWords(select)}>
+              {
+                getApiResponse ? 'Processing...please wait' : 'Submit'
+              }
+              </Button>
           </>
           :
           <div>
