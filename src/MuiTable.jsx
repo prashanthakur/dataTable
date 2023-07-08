@@ -1,103 +1,27 @@
-// import React, { useState } from 'react';
-// import { DataGrid } from '@mui/x-data-grid';
-// import MUIDataTable from "mui-datatables";
-
-// const columns = [
-//   {
-//    name: "name",
-//    label: "Name",
-//    options: {
-//     filter: true,
-//     sort: true,
-//    }
-//   },
-//   {
-//    name: "company",
-//    label: "Company",
-//    options: {
-//     filter: true,
-//     sort: false,
-//    }
-//   },
-//   {
-//    name: "city",
-//    label: "City",
-//    options: {
-//     filter: true,
-//     sort: false,
-//    }
-//   },
-//   {
-//    name: "state",
-//    label: "State",
-//    options: {
-//     filter: true,
-//     sort: false,
-//    }
-//   },
-//  ];
- 
-//  const data = [
-//   { name: "Joe James", company: "Test Corp", city: "Yonkers", state: "NY" },
-//   { name: "John Walsh", company: "Test Corp", city: "Hartford", state: "CT" },
-//   { name: "Bob Herm", company: "Test Corp", city: "Tampa", state: "FL" },
-//   { name: "James Houston", company: "Test Corp", city: "Dallas", state: "TX" },
-//  ];
- 
-//  const options = {
-//    filterType: 'checkbox',
-//    onRowClick:()=>console.log('clicked')
-//  };
-
-// export default function MuiTable() {
-//   const [selectedRows, setSelectedRows] = useState([]);
-
-//   const handleRowSelection = (selection) => {
-//     const selectedData = selection.selectionModel.map((selectedId) =>
-//       rows.find((row) => row.id === selectedId)
-//     );
-//     setSelectedRows(selectedData);
-//     console.log(selectedData);
-//   };
-
-//   console.log(selectedRows);
-
-//   return (
-//     <MUIDataTable
-//   title={"Employee List"}
-//   data={data}
-//   columns={columns}
-//   options={options}
-  
-// />
-//   );
-// }
-
-
-// ----------------------------->>>>>>>>>>>>>>>>MU
-
 import * as React from 'react';
+import { useState,useEffect } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
+import axios from 'axios';
 
 const columns = [
   { field: 'id', headerName: 'ID', width: 70 },
-  { field: 'firstName', headerName: 'First name', width: 130 },
-  { field: 'lastName', headerName: 'Last name', width: 130 },
-  {
-    field: 'age',
-    headerName: 'Age',
-    type: 'number',
-    width: 90,
-  },
-  {
-    field: 'fullName',
-    headerName: 'Full name',
-    description: 'This column has a value getter and is not sortable.',
-    sortable: false,
-    width: 160,
-    valueGetter: (params) =>
-      `${params.row.firstName || ''} ${params.row.lastName || ''}`,
-  },
+  { field: 'word', headerName: 'Word', width: 130 },
+  { field: 'text', headerName: 'Text', width: 400 },
+  // {
+  //   field: 'age',
+  //   headerName: 'Age',
+  //   type: 'number',
+  //   width: 90,
+  // },
+  // {
+  //   field: 'fullName',
+  //   headerName: 'Full name',
+  //   description: 'This column has a value getter and is not sortable.',
+  //   sortable: false,
+  //   width: 160,
+  //   valueGetter: (params) =>
+  //     `${params.row.firstName || ''} ${params.row.lastName || ''}`,
+  // },
 ];
 
 const rows = [
@@ -113,20 +37,70 @@ const rows = [
 ];
 
 export default function DataTable() {
+
+  useEffect(()=>{
+    axios.get('http://localhost:4000/words')
+      .then((response) => {
+        console.log(response);
+        setRowsData(response.data)
+      })
+      .catch((error) => {
+        console.error('Error loading data', error);
+      });
+  },[])
+
+  const [select,setSelect] = useState([])
+  const [rowsData,setRowsData] = useState([])
+
+  const onRowsSelectionHandler = (ids) => {
+    const selectedRowsData = ids.map((id) => rowsData.find((row) => row._id === id));
+    console.log("line 57",selectedRowsData);
+    setSelect(selectedRowsData)
+  };
+  // const dataHandler = (obj) => {
+  //   setSelect([...select,obj])
+  //   console.log(select)
+  // }
+
+  // const handleRowSelection = (params) => {
+  //   const selectedData = params.selectionModel.map((selectedId) =>
+  //     rowsData.find((row) => row.id === selectedId)
+  //   );
+  //   setSelect(selectedData);
+  //   console.log(selectedData);
+  // };
+
+  const submitWords = (words) => {
+    console.log(words)
+    // e.preventDefault();
+    axios.post('http://localhost:4000/api/generate-pdf', words)
+      .then((response) => {
+        console.log('PDF generated successfully!',response);
+      })
+      .catch((error) => {
+        console.error('PDF generation failed:', error);
+      });
+  };
+
   return (
+    <>
     <div style={{ height: 400, width: '100%' }}>
       <DataGrid
-        rows={rows}
+        rows={rowsData}
         columns={columns}
+        getRowId={(row) => row._id}
         initialState={{
           pagination: {
             paginationModel: { page: 0, pageSize: 5 },
           },
         }}
         pageSizeOptions={[5, 10]}
-        checkboxSelection
-        onRowClick={(params,event)=>console.log(params)}
+        checkboxSelection={true}
+        // onRowClick={(params,event)=>dataHandler(params.row)}
+        onRowSelectionModelChange={onRowsSelectionHandler}
       />
     </div>
+    <button onClick={()=>submitWords(select)}>submit</button>
+    </>
   );
 }
