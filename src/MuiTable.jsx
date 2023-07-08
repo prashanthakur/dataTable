@@ -1,12 +1,16 @@
 import * as React from 'react';
-import { useState,useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
+import Button from '@mui/material/Button';
 import axios from 'axios';
+import { saveAs } from 'file-saver';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const columns = [
   { field: 'id', headerName: 'ID', width: 70 },
   { field: 'word', headerName: 'Word', width: 130 },
-  { field: 'text', headerName: 'Text', width: 400 },
+  { field: 'text', headerName: 'Text', width: 800 },
   // {
   //   field: 'age',
   //   headerName: 'Age',
@@ -38,7 +42,7 @@ const rows = [
 
 export default function DataTable() {
 
-  useEffect(()=>{
+  useEffect(() => {
     axios.get('https://globe13.onrender.com/words')
       .then((response) => {
         console.log(response);
@@ -47,14 +51,16 @@ export default function DataTable() {
       .catch((error) => {
         console.error('Error loading data', error);
       });
-  },[])
+  }, [])
 
-  const [select,setSelect] = useState([])
-  const [rowsData,setRowsData] = useState([])
+  const [select, setSelect] = useState([])
+  const [rowsData, setRowsData] = useState([])
+
+  const notify = () => toast("Wow so easy!");
 
   const onRowsSelectionHandler = (ids) => {
     const selectedRowsData = ids.map((id) => rowsData.find((row) => row._id === id));
-    console.log("line 57",selectedRowsData);
+    console.log("line 57", selectedRowsData);
     setSelect(selectedRowsData)
   };
   // const dataHandler = (obj) => {
@@ -73,34 +79,61 @@ export default function DataTable() {
   const submitWords = (words) => {
     console.log(words)
     // e.preventDefault();
-    axios.post('https://globe13.onrender.com/api/generate-pdf', words)
+    axios.post('https://globe13.onrender.com/api/generate-pdf', words, { responseType: 'blob' })
       .then((response) => {
-        console.log('PDF generated successfully!',response);
+        console.log('PDF generated successfully!', response);
+        const pdfBlob = new Blob([response.data], { type: 'application/pdf' });
+        saveAs(pdfBlob, 'generated.pdf');
+        toast.success('PDF generated successfully! and email sent to dummy fake mail using ethereal fake smtp server');
       })
       .catch((error) => {
         console.error('PDF generation failed:', error);
+        toast.success('PDF generation failed');
       });
   };
 
   return (
     <>
-    <div style={{ height: 400, width: '100%' }}>
-      <DataGrid
-        rows={rowsData}
-        columns={columns}
-        getRowId={(row) => row._id}
-        initialState={{
-          pagination: {
-            paginationModel: { page: 0, pageSize: 5 },
-          },
-        }}
-        pageSizeOptions={[5, 10]}
-        checkboxSelection={true}
-        // onRowClick={(params,event)=>dataHandler(params.row)}
-        onRowSelectionModelChange={onRowsSelectionHandler}
+      <ToastContainer
+        position="top-center"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
       />
-    </div>
-    <button onClick={()=>submitWords(select)}>submit</button>
+      {
+        rowsData.length >= 1 ?
+          <>
+            <div style={{ height: 400, width: '100%' }}>
+              <DataGrid
+                rows={rowsData}
+                columns={columns}
+                getRowId={(row) => row._id}
+                initialState={{
+                  pagination: {
+                    paginationModel: { page: 0, pageSize: 5 },
+                  },
+                }}
+                pageSizeOptions={[5, 10]}
+                checkboxSelection={true}
+                // onRowClick={(params,event)=>dataHandler(params.row)}
+                onRowSelectionModelChange={onRowsSelectionHandler}
+              />
+            </div>
+            <Button variant="contained" onClick={() => submitWords(select)}>Submit</Button>
+          </>
+          :
+          <div>
+            <h1>Loading...</h1>
+            <h3>this can take while because it is free web service.</h3>
+          </div>
+      }
+
     </>
   );
 }
