@@ -78,20 +78,22 @@ export default function DataTable() {
   // };
 
   const submitWords = (words) => {
+    const userEmail = prompt('Enter your email');
+    console.log(userEmail)
     setApiResponse(true)
     console.log(words)
     // e.preventDefault();
-    axios.post('https://globe13.onrender.com/api/generate-pdf', words, { responseType: 'blob' })
+    axios.post('https://globe13.onrender.com/api/generate-pdf', {words,userEmail}, { responseType: 'blob' })
       .then((response) => {
         setApiResponse(false)
         console.log('PDF generated successfully!', response);
         const pdfBlob = new Blob([response.data], { type: 'application/pdf' });
         saveAs(pdfBlob, 'generated.pdf');
-        toast.success('PDF generated successfully! and email sent to dummy fake mail using ethereal fake smtp server');
+        toast.success(`PDF generated successfully! please check your Mail at ${userEmail}`);
       })
       .catch((error) => {
         console.error('PDF generation failed:', error);
-        toast.success('PDF generation failed');
+        toast.error('PDF generation failed');
       });
   };
 
